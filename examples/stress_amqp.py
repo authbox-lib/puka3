@@ -25,7 +25,7 @@ class AsyncGeneratorState(object):
         self.client = client
         self.promises = collections.defaultdict(list)
 
-        self.waiting_for = self.gen.next()
+        self.waiting_for = next(self.gen)
         self.client.set_callback(self.waiting_for, self.callback_wrapper)
 
     def callback_wrapper(self, t, result):
@@ -51,7 +51,7 @@ def worker(client, q, msg_cnt, body, prefetch_cnt, inc, avg):
 
     while fill > 0:
         fill -= BURST_SIZE
-        for i in xrange(BURST_SIZE):
+        for i in range(BURST_SIZE):
             promise = client.basic_publish(exchange='', routing_key=q,
                                           body=body, headers=MSG_HEADERS)
         yield promise # Wait only for one in burst (the last one).
@@ -90,14 +90,14 @@ def main():
 
     global counter, average, average_count
 
-    print ' [*] loop'
+    print(' [*] loop')
     while True:
         t0 = time.time()
         client.loop(timeout=1.0)
         td = time.time() - t0
         average_count = max(average_count, 1.0)
-        print "send: %i  avg: %.3fms " % (counter/td,
-                                          (average/average_count)*1000.0)
+        print("send: %i  avg: %.3fms " % (counter/td,
+                                          (average/average_count)*1000.0))
         counter = average = average_count = 0
 
 if __name__ == '__main__':

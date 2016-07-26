@@ -5,7 +5,7 @@ import socket
 import ssl
 import struct
 import time
-import urllib
+import urllib.request, urllib.parse, urllib.error
 from . import urlparse
 
 from . import channel
@@ -89,7 +89,7 @@ class Connection(object):
         set_close_exec(self.sd)
         try:
             self.sd.connect(sockaddr)
-        except socket.error, e:
+        except socket.error as e:
             if e.errno not in (errno.EINPROGRESS, errno.EWOULDBLOCK):
                 raise
 
@@ -137,12 +137,12 @@ class Connection(object):
             try:
                 r = self.sd.recv(Connection.frame_max)
                 break
-            except ssl.SSLError, e:
+            except ssl.SSLError as e:
                 if e.args[0] == ssl.SSL_ERROR_WANT_READ:
                     select.select([self.sd], [], [])
                     continue
                 raise
-            except socket.error, e:
+            except socket.error as e:
                 if e.errno == errno.EAGAIN:
                     return
                 else:
@@ -243,7 +243,7 @@ class Connection(object):
             self.on_write = self.on_write_nohandshake
             self.on_read = self.on_read_nohandshake
             return self.needs_write()
-	except ssl.SSLError, e:
+        except ssl.SSLError as e:
             if e.args[0] == ssl.SSL_ERROR_WANT_WRITE:
                 return True
         return False
@@ -277,12 +277,12 @@ class Connection(object):
                 # On windows socket.send blows up if the buffer is too large.
                 r = self.sd.send(self.send_buf.read(128*1024))
                 break
-            except ssl.SSLError, e:
+            except ssl.SSLError as e:
                 if e.args[0] == ssl.SSL_ERROR_WANT_WRITE:
                     select.select([], [self.sd], [])
                     continue
                 raise
-            except socket.error, e:
+            except socket.error as e:
                 if e.errno in (errno.EWOULDBLOCK, errno.ENOBUFS):
                     return
                 else:
@@ -418,7 +418,7 @@ class Connection(object):
         # And kill the socket
         try:
             self.sd.shutdown(socket.SHUT_RDWR)
-        except socket.error, e:
+        except socket.error as e:
             if e.errno is not errno.ENOTCONN: raise
         self.sd.close()
         self.sd = None
@@ -484,15 +484,15 @@ def parse_amqp_url(amqp_url):
     # urlsplit doesn't know how to parse query when scheme is amqp,
     # we need to pretend we're http'
     o = urlparse.urlsplit('http' + amqp_url[len('amqp'):])
-    username = urllib.unquote(o.username) if o.username is not None else 'guest'
-    password = urllib.unquote(o.password) if o.password is not None else 'guest'
+    username = urllib.parse.unquote(o.username) if o.username is not None else 'guest'
+    password = urllib.parse.unquote(o.password) if o.password is not None else 'guest'
 
     path = o.path[1:] if o.path.startswith('/') else o.path
     # We do not support empty vhost case. Empty vhost is treated as
     # '/'. This is mostly for backwards compatibility, and the fact
     # that empty vhost is not very useful.
-    vhost = urllib.unquote(path) if path else '/'
-    host = urllib.unquote(o.hostname) if o.hostname else 'localhost'
+    vhost = urllib.parse.unquote(path) if path else '/'
+    host = urllib.parse.unquote(o.hostname) if o.hostname else 'localhost'
     port = o.port if o.port else 5672
     ssl = o.scheme == 'https'
     return (username, password, vhost, host, port, ssl)

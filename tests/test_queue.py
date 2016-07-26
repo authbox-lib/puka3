@@ -1,4 +1,4 @@
-from __future__ import with_statement
+
 
 import os
 import puka3
@@ -101,8 +101,8 @@ class TestQueue(unittest.TestCase):
 
         t = client.basic_get(queue=qname)
         r = client.wait(t)
-        self.assertEquals(r['body'], 'b')
-        self.assertEquals(r['message_count'], 0)
+        self.assertEqual(r['body'], 'b')
+        self.assertEqual(r['message_count'], 0)
 
         t = client.queue_delete(queue=qname)
         client.wait(t)

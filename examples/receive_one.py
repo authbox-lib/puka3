@@ -13,11 +13,11 @@ client.wait(promise)
 promise = client.queue_declare(queue='test')
 client.wait(promise)
 
-print "  [*] Waiting for a message. Press CTRL+C to quit."
+print("  [*] Waiting for a message. Press CTRL+C to quit.")
 
 consume_promise = client.basic_consume(queue='test')
 result = client.wait(consume_promise)
-print " [x] Received message %r" % (result,)
+print(" [x] Received message %r" % (result,))
 
 client.basic_ack(result)
 

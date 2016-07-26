@@ -1,5 +1,5 @@
 # https://github.com/majek/puka3/issues/3
-from __future__ import with_statement
+
 
 import os
 import puka3

@@ -3,7 +3,7 @@ import logging
 
 from . import exceptions
 from . import spec
-from . import ordereddict
+from collections import OrderedDict
 
 log = logging.getLogger('puka3')
 
@@ -43,7 +43,7 @@ def _connection_start(t, result):
     t.conn.x_server_props = result['server_properties']
     try:
         t.conn.x_server_version = \
-            map(int, t.conn.x_server_props['version'].split('.'))
+            list(map(int, t.conn.x_server_props['version'].split('.')))
     except ValueError:
         t.conn.x_server_version = (Ellipsis,)
     if t.conn.pubacks is None:
@@ -77,7 +77,7 @@ def publish_promise(conn):
     pt.x_async_enabled = False
     pt.x_delivery_tag = 1
     pt.x_delivery_tag_shift = 0
-    pt.x_async_inflight = ordereddict.OrderedDict()
+    pt.x_async_inflight = OrderedDict()
     pt.x_async_next = []
     conn.x_publish_promise = pt
 
@@ -149,7 +149,7 @@ def _pt_basic_ack(pt, result):
     if delivery_tag in pt.x_async_inflight:
         if result['multiple'] == True:
             delivery_tags = []
-            for key in pt.x_async_inflight.iterkeys():
+            for key in pt.x_async_inflight.keys():
                 if key <= delivery_tag:
                     delivery_tags.append(key)
                 else:
@@ -174,7 +174,7 @@ def _pt_channel_close(pt, result):
                     spec.encode_channel_open(''))
     # All the publishes are marked as failed.
     exceptions.mark_frame(result)
-    for t in pt.x_async_inflight.itervalues():
+    for t in pt.x_async_inflight.values():
         t.done(result)
     pt.x_async_inflight.clear()
 
@@ -336,7 +336,7 @@ def _basic_cancel(t):
     _basic_cancel_one(t.x_ct)
 
 def _basic_cancel_one(ct):
-    consumer_tag = ct.x_consumer_tag.pop(ct.x_consumer_tag.keys()[0])
+    consumer_tag = ct.x_consumer_tag.pop(list(ct.x_consumer_tag.keys())[0])
     ct.register(spec.METHOD_BASIC_CANCEL_OK, _basic_cancel_ok)
     ct.send_frames( spec.encode_basic_cancel(consumer_tag) )
 

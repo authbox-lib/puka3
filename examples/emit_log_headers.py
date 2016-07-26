@@ -20,5 +20,5 @@ promise = client.basic_publish(exchange='headers_logs', routing_key='',
                                headers=headers)
 client.wait(promise)
 
-print " [x] Sent %r %r" % (headers, message)
+print(" [x] Sent %r %r" % (headers, message))
 client.close()

@@ -23,8 +23,7 @@ def machine_decorator(method):
     return wrapper
 
 
-class Client(connection.Connection):
-    __metaclass__ = meta_attach_methods
+class Client(connection.Connection, metaclass=meta_attach_methods):
     attach_methods = (machine_decorator, [
         machine.queue_declare,
         machine.queue_purge,

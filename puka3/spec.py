@@ -1011,7 +1011,7 @@ def encode_basic_properties(body_size, props):
     flags = 0
     enc = ENCODE_PROPS_BASIC
 
-    for key in BASIC_PROPS_SET & set(props.iterkeys()):
+    for key in BASIC_PROPS_SET & set(props.keys()):
         i, f, fun = enc[key]
         flags |= f
         pieces[i] = fun(props[key])
@@ -1027,7 +1027,7 @@ def encode_basic_properties(body_size, props):
 def split_headers(user_headers, properties_set):
     props = {}
     headers = {}
-    for key, value in user_headers.iteritems():
+    for key, value in user_headers.items():
         if key in properties_set:
             props[key] = value
         else:

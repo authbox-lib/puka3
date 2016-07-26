@@ -1,7 +1,7 @@
 CODEGEN_DIR=vendor/rabbitmq-codegen
 AMQP_JSON_SPEC=$(CODEGEN_DIR)/amqp-rabbitmq-0.9.1.json
 
-PYTHON=python
+PYTHON=python3
 
 all: vendor/rabbitmq-codegen/amqp_codegen.py puka3/spec.py puka3/spec_exceptions.py tests
 

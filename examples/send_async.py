@@ -15,7 +15,7 @@ def on_queue_declare(promise, result):
                          callback=on_basic_publish)
 
 def on_basic_publish(promise, result):
-    print " [*] Message sent"
+    print(" [*] Message sent")
     client.loop_break()
 
 client = puka3.Client("amqp://localhost/")

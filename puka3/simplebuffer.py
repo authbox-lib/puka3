@@ -1,14 +1,14 @@
 import os
 try:
-    import cStringIO as StringIO
+    import io as StringIO
 except ImportError:
-    import StringIO
+    import io
 
 # Python 2.4 support: os lacks SEEK_END and friends
 try:
     getattr(os, "SEEK_END")
 except AttributeError:
-    os.SEEK_SET, os.SEEK_CUR, os.SEEK_END = range(3)
+    os.SEEK_SET, os.SEEK_CUR, os.SEEK_END = list(range(3))
 
 
 class SimpleBuffer(object):
@@ -44,7 +44,7 @@ class SimpleBuffer(object):
     >>> b.flush() # run GC code
     """
     def __init__(self):
-        self.buf = StringIO.StringIO()
+        self.buf = io.StringIO()
         self.size = 0
         self.offset = 0
 
@@ -69,14 +69,14 @@ class SimpleBuffer(object):
         # GC old StringIO instance and free memory used by it.
         if self.size == 0 and self.offset > 524288:
             self.buf.close()
-            self.buf = StringIO.StringIO()
+            self.buf = io.StringIO()
             self.offset = 0
 
     def flush(self):
         self.consume(self.size)
 
 
-    def __nonzero__(self):
+    def __bool__(self):
         return self.size > 0
 
     def __len__(self):

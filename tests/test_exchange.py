@@ -1,4 +1,4 @@
-from __future__ import with_statement
+
 
 import os
 import puka3
@@ -71,7 +71,7 @@ class TestExchange(base.TestCase):
 
         promise = client.basic_get(queue=qname, no_ack=True)
         r = client.wait(promise)
-        self.assertEquals(r['body'], 'b')
+        self.assertEqual(r['body'], 'b')
 
         promise = client.basic_get(queue=qname)
         r = client.wait(promise)

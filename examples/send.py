@@ -18,10 +18,10 @@ promise = client.basic_publish(exchange='', routing_key='test',
                               body="Hello world!")
 client.wait(promise)
 
-print " [*] Message sent"
+print(" [*] Message sent")
 
 promise = client.queue_declare(queue='test', passive=True)
-print " [*] Queue size:", client.wait(promise)['message_count']
+print(" [*] Queue size:", client.wait(promise)['message_count'])
 
 promise = client.close()
 client.wait(promise)

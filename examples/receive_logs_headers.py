@@ -16,7 +16,7 @@ queue_name = client.wait(promise)['queue']
 
 argv = sys.argv[1:]
 if not argv:
-    print >> sys.stderr, "Usage: %s [header:value]..." % (sys.argv[0],)
+    print("Usage: %s [header:value]..." % (sys.argv[0],), file=sys.stderr)
     sys.exit(1)
 
 headers = dict(arg.split(':', 2) for arg in argv)
@@ -25,9 +25,9 @@ promise = client.queue_bind(exchange='headers_logs', queue=queue_name,
                             routing_key='', arguments=headers)
 client.wait(promise)
 
-print ' [*] Waiting for logs %r. To exit press CTRL+C' % (headers,)
+print(' [*] Waiting for logs %r. To exit press CTRL+C' % (headers,))
 
 consume_promise = client.basic_consume(queue=queue_name, no_ack=True)
 while True:
     msg_result = client.wait(consume_promise)
-    print " [x] %r:%r" % (msg_result['headers'], msg_result['body'])
+    print(" [x] %r:%r" % (msg_result['headers'], msg_result['body']))

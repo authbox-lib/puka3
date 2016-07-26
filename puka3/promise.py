@@ -38,7 +38,7 @@ class PromiseCollection(object):
         return self._promises[number]
 
     def all(self):
-        return self._promises.values()
+        return list(self._promises.values())
 
 
 class Promise(object):
@@ -170,6 +170,6 @@ class Promise(object):
             pass
         else:
             # TODO:
-            print "Unable to free channel %i (promise %i)" % \
-                (self.channel.number, self.number)
+            print("Unable to free channel %i (promise %i)" % \
+                (self.channel.number, self.number))
         self.number = None

@@ -15,7 +15,7 @@ class TestLimits(unittest.TestCase):
         promise = client.connect()
         client.wait(promise)
 
-        queues = [qname+'.%s' % (i,) for i in xrange(100)]
+        queues = [qname+'.%s' % (i,) for i in range(100)]
         promises = [client.queue_declare(queue=q) for q in queues]
 
         for promise in promises:

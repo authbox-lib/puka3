@@ -2,7 +2,7 @@ import array
 import logging
 
 from . import machine
-from spec_exceptions import ChannelError
+from .spec_exceptions import ChannelError
 
 log = logging.getLogger('puka3')
 
@@ -23,7 +23,7 @@ class ChannelCollection(object):
         new_channel_max = new_channel_max if new_channel_max != 0 else 65535
         self.channel_max = min(self.channel_max, new_channel_max)
         self.free_channel_numbers = array.array('H',
-                                                xrange(self.channel_max, 0, -1))
+                                                range(self.channel_max, 0, -1))
         return self.channel_max
 
     def new(self):

@@ -1,4 +1,4 @@
-from __future__ import with_statement
+
 
 import os
 import puka3
@@ -100,7 +100,8 @@ class TestPublishAsync(base.TestCase):
                                        mandatory=True, body=self.msg)
         try:
             client.wait(promise)
-        except puka3.NoRoute, (response,):
+        except puka3.NoRoute as xxx_todo_changeme:
+            (response,) = xxx_todo_changeme.args
             pass
 
         self.assertEqual(response['reply_code'], 312)

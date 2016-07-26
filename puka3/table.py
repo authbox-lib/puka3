@@ -119,7 +119,7 @@ def encode(table):
     length_index = len(pieces)
     pieces.append(None) # placeholder
     tablesize = 0
-    for (key, value) in table.iteritems():
+    for (key, value) in table.items():
         pieces.append(struct.pack('B', len(key)))
         pieces.append(key)
         tablesize = tablesize + 1 + len(key)
@@ -138,11 +138,11 @@ def encode_value(pieces, value):
     elif isinstance(value, bool):
         pieces.append(struct.pack('>cB', 't', int(value)))
         return 2
-    elif isinstance(value, int) or isinstance(value, long):
-        if -2147483648L <= value <= 2147483647L:
+    elif isinstance(value, int) or isinstance(value, int):
+        if -2147483648 <= value <= 2147483647:
             pieces.append(struct.pack('>ci', 'I', value))
             return 5
-        elif -9223372036854775808L <= value <= 9223372036854775807L:
+        elif -9223372036854775808 <= value <= 9223372036854775807:
             pieces.append(struct.pack('>cq', 'l', value))
             return 9
         else:
@@ -262,7 +262,7 @@ def decode_value(encoded, offset):
         offset = offset + 4
     elif kind == 'l':
         value = struct.unpack_from('>q', encoded, offset)[0]
-        value = long(value)
+        value = int(value)
         offset = offset + 8
     elif kind == 'f':
         # IEEE 754 single

@@ -1,4 +1,4 @@
-from __future__ import with_statement
+
 
 import os
 import puka3
@@ -181,12 +181,12 @@ class TestBasic(base.TestCase):
         promise = client.basic_get(queue=self.name, no_ack=True)
         result = client.wait(promise)
         self.assertTrue('delivery_mode' in result['headers'])
-        self.assertEquals(result['headers']['delivery_mode'], 2)
+        self.assertEqual(result['headers']['delivery_mode'], 2)
 
         promise = client.basic_get(queue=self.name, no_ack=True)
         result = client.wait(promise)
         self.assertTrue('delivery_mode' in result['headers'])
-        self.assertEquals(result['headers']['delivery_mode'], 1)
+        self.assertEqual(result['headers']['delivery_mode'], 1)
 
         promise = client.queue_delete(queue=self.name)
         client.wait(promise)
@@ -318,8 +318,8 @@ class TestBasic(base.TestCase):
             "app_id": 'j',
             "cluster_id": 'k',
             "custom": 'l',
-            "blah2": [True, 1, -1, 4611686018427387904L, None, float(12e10),
-                      -4611686018427387904L, [1,2,3,4, {"a":"b", "c":[]}]],
+            "blah2": [True, 1, -1, 4611686018427387904, None, float(12e10),
+                      -4611686018427387904, [1,2,3,4, {"a":"b", "c":[]}]],
             }
 
         t = client.basic_publish(exchange='', routing_key=self.name,
@@ -447,7 +447,7 @@ class TestBasic(base.TestCase):
 
         promise = client.basic_get(queue=qname)
         r = client.wait(promise)
-        self.assertEquals(r['body'], 'a')
+        self.assertEqual(r['body'], 'a')
 
         promise = client.queue_delete(queue=qname)
         client.wait(promise)
