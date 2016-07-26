@@ -123,7 +123,7 @@ class TestBasic(base.TestCase):
             with self.assertRaises(puka3.NotFound) as cm:
                 client.wait(promise)
 
-            (r,) = cm.exception # unpack args of exception
+            (r,) = cm.exception.args # unpack args of exception
             self.assertTrue(r.is_error)
             self.assertEqual(r['reply_code'], 404)
 
@@ -471,19 +471,19 @@ class TestBasic(base.TestCase):
         client.wait(promise)
 
         consume_promise = client.basic_consume(queue=self.name, prefetch_count=1)
-        result = client.wait(consume_promise, timeout=0.1)
+        result = client.wait(consume_promise, timeout=0.5)
         self.assertEqual(result['body'], 'a')
 
-        result = client.wait(consume_promise, timeout=0.1)
+        result = client.wait(consume_promise, timeout=0.5)
         self.assertEqual(result, None)
 
         promise = client.basic_qos(consume_promise, prefetch_count=2)
         result = client.wait(promise)
 
-        result = client.wait(consume_promise, timeout=0.1)
+        result = client.wait(consume_promise, timeout=0.5)
         self.assertEqual(result['body'], 'b')
 
-        result = client.wait(consume_promise, timeout=0.1)
+        result = client.wait(consume_promise, timeout=0.5)
         self.assertEqual(result, None)
 
         promise = client.queue_delete(queue=self.name)

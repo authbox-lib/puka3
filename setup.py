@@ -9,12 +9,12 @@ os.link = shutil.copy
 
 
 if not os.path.exists("puka3/spec.py"):
-    print >> sys.stderr, "Run 'make' first."
+    print("Run 'make' first.", file=sys.stderr)
     sys.exit(1)
 
 
 setuptools.setup(name='puka3',
-      version=file('VERSION').read().strip(),
+      version=open('VERSION').read().strip(),
       description='Puka3 - the opinionated RabbitMQ client',
       author='Josh Yudaken',
       author_email='josh@smyte.com',

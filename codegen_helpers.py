@@ -33,7 +33,7 @@ class Field(object):
 
 class FieldStr(Field):
     def _do_print(self, prefix, dname):
-        print(prefix+"%s = data[offset : offset+str_len]" % dname)
+        print(prefix+"%s = data[offset : offset+str_len].decode('utf-8')" % dname)
         print(prefix+"offset += str_len")
 
 class FieldTable(Field):
@@ -216,7 +216,7 @@ class PackWrapper(object):
                 s = ""
                 for size, name in zip(sizes, names):
                     s+=  "%0*x" % (size*2, int(name))
-                print(prefix+'"%s",' % (''.join(["\\x%s" % p
+                print(prefix+'b"%s",' % (''.join(["\\x%s" % p
                                                 for p in re.findall('..', s)]),))
             else:
                 if fmt[0] is not None:

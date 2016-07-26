@@ -154,7 +154,7 @@ def print_encode_method(m):
     if not m.hasContent:
         print("    return ( (0x01,")
         if fields.group_count() > 1:
-            print("              b''.join((")
+            print("              bin_join((")
             fields.do_print(' '*16, '%s')
             print("              ))")
         else:
@@ -162,7 +162,7 @@ def print_encode_method(m):
         print("           ), )")
     else:
         print("    return [ (0x01,")
-        print("              b''.join((")
+        print("              bin_join((")
         fields.do_print(' '*16, '%s')
         print("              ))")
         print("           ),")
@@ -189,7 +189,7 @@ def print_encode_properties(c):
             fields.add("table.encode(val)", f.t, nr='%s')
         fields.close()
         if len(fields.fields) > 1:
-            print(' '*8 + "lambda val: ''.join((")
+            print(' '*8 + "lambda val: bin_join((")
             fields.do_print(' '*16, '%s')
             print(' '*8 + ')) ),')
         else:
@@ -204,16 +204,16 @@ def print_encode_properties(c):
     print("    flags = 0")
     print("    enc = ENCODE_PROPS_%s" % (c.name.upper(),))
     print()
-    print("    for key in %s_PROPS_SET & set(props.iterkeys()):" % \
+    print("    for key in %s_PROPS_SET & set(props.keys()):" % \
         (c.name.upper(),))
     print("        i, f, fun = enc[key]")
     print("        flags |= f")
     print("        pieces[i] = fun(props[key])")
     print("")
-    print("    return (0x02, ''.join((")
+    print("    return (0x02, bin_join((")
     print("        pack('!HHQH',")
     print("              %s, 0, body_size, flags)," % (c.u,))
-    print("        ''.join(pieces),")
+    print("        bin_join(pieces),")
     print("        ))")
     print("        )")
 
@@ -271,6 +271,11 @@ from struct import pack, unpack_from
 
 from . import table
 
+def bin_join(items):
+    return b''.join((
+        i.encode('utf-8') if isinstance(i, str) else i for i in items
+    ))
+
 """)
     print("PREAMBLE = b'AMQP\\x00\\x%02x\\x%02x\\x%02x'" % (
         spec.major, spec.minor, spec.revision))
@@ -314,7 +319,7 @@ class Frame(dict):
 def split_headers(user_headers, properties_set):
     props = {}
     headers = {}
-    for key, value in user_headers.iteritems():
+    for key, value in user_headers.items():
         if key in properties_set:
             props[key] = value
         else:

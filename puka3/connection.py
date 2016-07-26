@@ -6,7 +6,6 @@ import ssl
 import struct
 import time
 import urllib.request, urllib.parse, urllib.error
-from . import urlparse
 
 from . import channel
 from . import exceptions
@@ -17,6 +16,10 @@ from . import promise
 
 log = logging.getLogger('puka3')
 
+def _bin_join(items):
+    return b''.join((
+        i.encode('utf-8') if isinstance(i, str) else i for i in items
+    ))
 
 class Connection(object):
     frame_max = 131072
@@ -165,7 +168,7 @@ class Connection(object):
 
     def _handle_conn_read(self, data, offset):
         self._handle_read = self._handle_frame_read
-        if data[offset:].startswith('AMQP'):
+        if data[offset:].startswith(b'AMQP'):
             a,b,c,d = struct.unpack('!BBBB', data[offset+4:offset+4+4])
             self._shutdown(exceptions.mark_frame(
                     spec.Frame(),
@@ -183,7 +186,7 @@ class Connection(object):
         offset += 7
         if len(data)-start_offset < 8+payload_size:
             return start_offset, 8+payload_size
-        assert data[offset+payload_size] == '\xCE'
+        assert data[offset+payload_size] == 0xCE
 
         if frame_type == 0x01: # Method frame
             method_id, = struct.unpack_from('!I', data, offset)
@@ -196,7 +199,7 @@ class Connection(object):
             props, offset = spec.PROPS[class_id](data, offset)
             self.channels.channels[channel].inbound_props(body_size, props)
         elif frame_type == 0x03: # body frame
-            body_chunk = str(data[offset : offset+payload_size])
+            body_chunk = data[offset : offset+payload_size]
             self.channels.channels[channel].inbound_body(body_chunk)
             offset += len(body_chunk)
         elif frame_type == 0x08: # heartbeat frame
@@ -226,12 +229,12 @@ class Connection(object):
         self.send_buf.write(data)
 
     def _send_frames(self, channel_number, frames):
-        self._send( ''.join([''.join((struct.pack('!BHI',
-                                                  frame_type,
-                                                  channel_number,
-                                                  len(payload)),
-                                      payload, '\xCE')) \
-                                 for frame_type, payload in frames]) )
+        self._send(b''.join([
+            struct.pack('!BHI', frame_type, channel_number, len(payload)) +
+            (payload.encode('utf-8') if isinstance(payload, str) else payload) +
+            b'\xCE'
+            for frame_type, payload in frames
+        ]))
 
     def needs_write_connect(self):
         return not self.sd is None
@@ -483,7 +486,7 @@ def parse_amqp_url(amqp_url):
         "Only amqp:// and amqps:// protocols are supported."
     # urlsplit doesn't know how to parse query when scheme is amqp,
     # we need to pretend we're http'
-    o = urlparse.urlsplit('http' + amqp_url[len('amqp'):])
+    o = urllib.parse.urlsplit('http' + amqp_url[len('amqp'):])
     username = urllib.parse.unquote(o.username) if o.username is not None else 'guest'
     password = urllib.parse.unquote(o.password) if o.password is not None else 'guest'
 

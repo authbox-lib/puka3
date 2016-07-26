@@ -25,7 +25,10 @@ def _connection_handshake(t):
 def _connection_start(t, result):
     # log.info("Connected to %r", result['server_properties'])
     assert 'PLAIN' in result['mechanisms'].split(), "Only PLAIN auth supported."
-    response = '\0%s\0%s' % (t.conn.username, t.conn.password)
+    response = b'\0%s\0%s' % (
+        t.conn.username.encode('utf-8'),
+        t.conn.password.encode('utf-8'),
+    )
     scapa = result['server_properties'].get('capabilities', {})
     ccapa = {}
     if scapa.get('consumer_cancel_notify'):

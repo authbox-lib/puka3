@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 import sys
 sys.path.append("..")
@@ -9,9 +9,11 @@ logging.basicConfig(level=logging.DEBUG, format=FORMAT_CONS)
 
 
 
+import os
 import puka3
 
-client = puka3.Client("amqp://localhost/")
+AMQP_URL = os.environ.get('AMQP_URL', "amqp://localhost/")
+client = puka3.Client(AMQP_URL)
 
 promise = client.connect()
 client.wait(promise)

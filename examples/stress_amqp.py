@@ -1,13 +1,14 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 import sys
 sys.path.append("..")
 
+import os
 import puka3
 import time
 import collections
 
-AMQP_URL = "amqp://localhost/"
+AMQP_URL = os.environ.get('AMQP_URL', "amqp://localhost/")
 QUEUE_CNT = 32
 BURST_SIZE = 120
 QUEUE_SIZE = 1000

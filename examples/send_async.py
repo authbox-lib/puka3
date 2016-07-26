@@ -1,9 +1,9 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 import sys
 sys.path.append("..")
 
-
+import os
 import puka3
 
 def on_connection(promise, result):
@@ -18,7 +18,8 @@ def on_basic_publish(promise, result):
     print(" [*] Message sent")
     client.loop_break()
 
-client = puka3.Client("amqp://localhost/")
+AMQP_URL = os.environ.get('AMQP_URL', "amqp://localhost/")
+client = puka3.Client(AMQP_URL)
 client.connect(callback=on_connection)
 client.loop()
 

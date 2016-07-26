@@ -5,8 +5,13 @@ from struct import pack, unpack_from
 
 from . import table
 
+def bin_join(items):
+    return b''.join((
+        i.encode('utf-8') if isinstance(i, str) else i for i in items
+    ))
 
-PREAMBLE = 'AMQP\x00\x00\x09\x01'
+
+PREAMBLE = b'AMQP\x00\x00\x09\x01'
 
 METHOD_CONNECTION_START         = 0x000A000A 	# 10,10 655370
 METHOD_CONNECTION_START_OK      = 0x000A000B 	# 10,11 655371
@@ -18,6 +23,8 @@ METHOD_CONNECTION_OPEN          = 0x000A0028 	# 10,40 655400
 METHOD_CONNECTION_OPEN_OK       = 0x000A0029 	# 10,41 655401
 METHOD_CONNECTION_CLOSE         = 0x000A0032 	# 10,50 655410
 METHOD_CONNECTION_CLOSE_OK      = 0x000A0033 	# 10,51 655411
+METHOD_CONNECTION_BLOCKED       = 0x000A003C 	# 10,60 655420
+METHOD_CONNECTION_UNBLOCKED     = 0x000A003D 	# 10,61 655421
 METHOD_CHANNEL_OPEN             = 0x0014000A 	# 20,10 1310730
 METHOD_CHANNEL_OPEN_OK          = 0x0014000B 	# 20,11 1310731
 METHOD_CHANNEL_FLOW             = 0x00140014 	# 20,20 1310740
@@ -80,16 +87,16 @@ class FrameConnectionStart(Frame):
 def decode_connection_start(data, offset):
     frame = FrameConnectionStart()
     (frame['version_major'],
-     frame['version_minor']) = unpack_from('!BB', data, offset)
+      frame['version_minor']) = unpack_from('!BB', data, offset)
     offset += 1+1
     frame['server_properties'], offset = table.decode(data, offset)
     (str_len,) = unpack_from('!I', data, offset)
     offset += 4
-    frame['mechanisms'] = data[offset : offset+str_len]
+    frame['mechanisms'] = data[offset : offset+str_len].decode('utf-8')
     offset += str_len
     (str_len,) = unpack_from('!I', data, offset)
     offset += 4
-    frame['locales'] = data[offset : offset+str_len]
+    frame['locales'] = data[offset : offset+str_len].decode('utf-8')
     offset += str_len
     return frame, offset
 
@@ -102,7 +109,7 @@ def decode_connection_secure(data, offset):
     frame = FrameConnectionSecure()
     (str_len,) = unpack_from('!I', data, offset)
     offset += 4
-    frame['challenge'] = data[offset : offset+str_len]
+    frame['challenge'] = data[offset : offset+str_len].decode('utf-8')
     offset += str_len
     return frame, offset
 
@@ -114,8 +121,8 @@ class FrameConnectionTune(Frame):
 def decode_connection_tune(data, offset):
     frame = FrameConnectionTune()
     (frame['channel_max'],
-     frame['frame_max'],
-     frame['heartbeat']) = unpack_from('!HIH', data, offset)
+      frame['frame_max'],
+      frame['heartbeat']) = unpack_from('!HIH', data, offset)
     offset += 2+4+2
     return frame, offset
 
@@ -128,7 +135,7 @@ def decode_connection_open_ok(data, offset):
     frame = FrameConnectionOpenOk()
     (str_len,) = unpack_from('!B', data, offset)
     offset += 1
-    frame['known_hosts'] = data[offset : offset+str_len]
+    frame['known_hosts'] = data[offset : offset+str_len].decode('utf-8')
     offset += str_len
     return frame, offset
 
@@ -140,12 +147,12 @@ class FrameConnectionClose(Frame):
 def decode_connection_close(data, offset):
     frame = FrameConnectionClose()
     (frame['reply_code'],
-     str_len) = unpack_from('!HB', data, offset)
+      str_len) = unpack_from('!HB', data, offset)
     offset += 2+1
-    frame['reply_text'] = data[offset : offset+str_len]
+    frame['reply_text'] = data[offset : offset+str_len].decode('utf-8')
     offset += str_len
     (frame['class_id'],
-     frame['method_id']) = unpack_from('!HH', data, offset)
+      frame['method_id']) = unpack_from('!HH', data, offset)
     offset += 2+2
     return frame, offset
 
@@ -159,6 +166,28 @@ def decode_connection_close_ok(data, offset):
     return frame, offset
 
 
+class FrameConnectionBlocked(Frame):
+    name = 'connection.blocked'
+    method_id = METHOD_CONNECTION_BLOCKED
+
+def decode_connection_blocked(data, offset):
+    frame = FrameConnectionBlocked()
+    (str_len,) = unpack_from('!B', data, offset)
+    offset += 1
+    frame['reason'] = data[offset : offset+str_len].decode('utf-8')
+    offset += str_len
+    return frame, offset
+
+
+class FrameConnectionUnblocked(Frame):
+    name = 'connection.unblocked'
+    method_id = METHOD_CONNECTION_UNBLOCKED
+
+def decode_connection_unblocked(data, offset):
+    frame = FrameConnectionUnblocked()
+    return frame, offset
+
+
 class FrameChannelOpenOk(Frame):
     name = 'channel.open_ok'
     method_id = METHOD_CHANNEL_OPEN_OK
@@ -167,7 +196,7 @@ def decode_channel_open_ok(data, offset):
     frame = FrameChannelOpenOk()
     (str_len,) = unpack_from('!I', data, offset)
     offset += 4
-    frame['channel_id'] = data[offset : offset+str_len]
+    frame['channel_id'] = data[offset : offset+str_len].decode('utf-8')
     offset += str_len
     return frame, offset
 
@@ -203,12 +232,12 @@ class FrameChannelClose(Frame):
 def decode_channel_close(data, offset):
     frame = FrameChannelClose()
     (frame['reply_code'],
-     str_len) = unpack_from('!HB', data, offset)
+      str_len) = unpack_from('!HB', data, offset)
     offset += 2+1
-    frame['reply_text'] = data[offset : offset+str_len]
+    frame['reply_text'] = data[offset : offset+str_len].decode('utf-8')
     offset += str_len
     (frame['class_id'],
-     frame['method_id']) = unpack_from('!HH', data, offset)
+      frame['method_id']) = unpack_from('!HH', data, offset)
     offset += 2+2
     return frame, offset
 
@@ -266,10 +295,10 @@ def decode_queue_declare_ok(data, offset):
     frame = FrameQueueDeclareOk()
     (str_len,) = unpack_from('!B', data, offset)
     offset += 1
-    frame['queue'] = data[offset : offset+str_len]
+    frame['queue'] = data[offset : offset+str_len].decode('utf-8')
     offset += str_len
     (frame['message_count'],
-     frame['consumer_count']) = unpack_from('!II', data, offset)
+      frame['consumer_count']) = unpack_from('!II', data, offset)
     offset += 4+4
     return frame, offset
 
@@ -331,7 +360,7 @@ def decode_basic_consume_ok(data, offset):
     frame = FrameBasicConsumeOk()
     (str_len,) = unpack_from('!B', data, offset)
     offset += 1
-    frame['consumer_tag'] = data[offset : offset+str_len]
+    frame['consumer_tag'] = data[offset : offset+str_len].decode('utf-8')
     offset += str_len
     return frame, offset
 
@@ -344,7 +373,7 @@ def decode_basic_cancel(data, offset):
     frame = FrameBasicCancel()
     (str_len,) = unpack_from('!B', data, offset)
     offset += 1
-    frame['consumer_tag'] = data[offset : offset+str_len]
+    frame['consumer_tag'] = data[offset : offset+str_len].decode('utf-8')
     offset += str_len
     (bits,) = unpack_from('!B', data, offset)
     frame['nowait'] = bool(bits & 0x1)
@@ -360,7 +389,7 @@ def decode_basic_cancel_ok(data, offset):
     frame = FrameBasicCancelOk()
     (str_len,) = unpack_from('!B', data, offset)
     offset += 1
-    frame['consumer_tag'] = data[offset : offset+str_len]
+    frame['consumer_tag'] = data[offset : offset+str_len].decode('utf-8')
     offset += str_len
     return frame, offset
 
@@ -374,17 +403,17 @@ class FrameBasicReturn(Frame):
 def decode_basic_return(data, offset):
     frame = FrameBasicReturn()
     (frame['reply_code'],
-     str_len) = unpack_from('!HB', data, offset)
+      str_len) = unpack_from('!HB', data, offset)
     offset += 2+1
-    frame['reply_text'] = data[offset : offset+str_len]
+    frame['reply_text'] = data[offset : offset+str_len].decode('utf-8')
     offset += str_len
     (str_len,) = unpack_from('!B', data, offset)
     offset += 1
-    frame['exchange'] = data[offset : offset+str_len]
+    frame['exchange'] = data[offset : offset+str_len].decode('utf-8')
     offset += str_len
     (str_len,) = unpack_from('!B', data, offset)
     offset += 1
-    frame['routing_key'] = data[offset : offset+str_len]
+    frame['routing_key'] = data[offset : offset+str_len].decode('utf-8')
     offset += str_len
     return frame, offset
 
@@ -399,18 +428,18 @@ def decode_basic_deliver(data, offset):
     frame = FrameBasicDeliver()
     (str_len,) = unpack_from('!B', data, offset)
     offset += 1
-    frame['consumer_tag'] = data[offset : offset+str_len]
+    frame['consumer_tag'] = data[offset : offset+str_len].decode('utf-8')
     offset += str_len
     (frame['delivery_tag'],
-     bits,
-     str_len) = unpack_from('!QBB', data, offset)
+      bits,
+      str_len) = unpack_from('!QBB', data, offset)
     frame['redelivered'] = bool(bits & 0x1)
     offset += 8+1+1
-    frame['exchange'] = data[offset : offset+str_len]
+    frame['exchange'] = data[offset : offset+str_len].decode('utf-8')
     offset += str_len
     (str_len,) = unpack_from('!B', data, offset)
     offset += 1
-    frame['routing_key'] = data[offset : offset+str_len]
+    frame['routing_key'] = data[offset : offset+str_len].decode('utf-8')
     offset += str_len
     return frame, offset
 
@@ -424,15 +453,15 @@ class FrameBasicGetOk(Frame):
 def decode_basic_get_ok(data, offset):
     frame = FrameBasicGetOk()
     (frame['delivery_tag'],
-     bits,
-     str_len) = unpack_from('!QBB', data, offset)
+      bits,
+      str_len) = unpack_from('!QBB', data, offset)
     frame['redelivered'] = bool(bits & 0x1)
     offset += 8+1+1
-    frame['exchange'] = data[offset : offset+str_len]
+    frame['exchange'] = data[offset : offset+str_len].decode('utf-8')
     offset += str_len
     (str_len,) = unpack_from('!B', data, offset)
     offset += 1
-    frame['routing_key'] = data[offset : offset+str_len]
+    frame['routing_key'] = data[offset : offset+str_len].decode('utf-8')
     offset += str_len
     (frame['message_count'],) = unpack_from('!I', data, offset)
     offset += 4
@@ -447,7 +476,7 @@ def decode_basic_get_empty(data, offset):
     frame = FrameBasicGetEmpty()
     (str_len,) = unpack_from('!B', data, offset)
     offset += 1
-    frame['cluster_id'] = data[offset : offset+str_len]
+    frame['cluster_id'] = data[offset : offset+str_len].decode('utf-8')
     offset += str_len
     return frame, offset
 
@@ -459,7 +488,7 @@ class FrameBasicAck(Frame):
 def decode_basic_ack(data, offset):
     frame = FrameBasicAck()
     (frame['delivery_tag'],
-     bits) = unpack_from('!QB', data, offset)
+      bits) = unpack_from('!QB', data, offset)
     frame['multiple'] = bool(bits & 0x1)
     offset += 8+1
     return frame, offset
@@ -491,6 +520,8 @@ METHODS = {
     METHOD_CONNECTION_OPEN_OK:      decode_connection_open_ok,
     METHOD_CONNECTION_CLOSE:        decode_connection_close,
     METHOD_CONNECTION_CLOSE_OK:     decode_connection_close_ok,
+    METHOD_CONNECTION_BLOCKED:      decode_connection_blocked,
+    METHOD_CONNECTION_UNBLOCKED:    decode_connection_unblocked,
     METHOD_CHANNEL_OPEN_OK:         decode_channel_open_ok,
     METHOD_CHANNEL_FLOW:            decode_channel_flow,
     METHOD_CHANNEL_FLOW_OK:         decode_channel_flow_ok,
@@ -527,12 +558,12 @@ def decode_basic_properties(data, offset):
     if (flags & 0x8000): # 1 << 15
         (str_len,) = unpack_from('!B', data, offset)
         offset += 1
-        props['content_type'] = data[offset : offset+str_len]
+        props['content_type'] = data[offset : offset+str_len].decode('utf-8')
         offset += str_len
     if (flags & 0x4000): # 1 << 14
         (str_len,) = unpack_from('!B', data, offset)
         offset += 1
-        props['content_encoding'] = data[offset : offset+str_len]
+        props['content_encoding'] = data[offset : offset+str_len].decode('utf-8')
         offset += str_len
     if (flags & 0x2000): # 1 << 13
         props['headers'], offset = table.decode(data, offset)
@@ -545,22 +576,22 @@ def decode_basic_properties(data, offset):
     if (flags & 0x0400): # 1 << 10
         (str_len,) = unpack_from('!B', data, offset)
         offset += 1
-        props['correlation_id'] = data[offset : offset+str_len]
+        props['correlation_id'] = data[offset : offset+str_len].decode('utf-8')
         offset += str_len
     if (flags & 0x0200): # 1 << 9
         (str_len,) = unpack_from('!B', data, offset)
         offset += 1
-        props['reply_to'] = data[offset : offset+str_len]
+        props['reply_to'] = data[offset : offset+str_len].decode('utf-8')
         offset += str_len
     if (flags & 0x0100): # 1 << 8
         (str_len,) = unpack_from('!B', data, offset)
         offset += 1
-        props['expiration'] = data[offset : offset+str_len]
+        props['expiration'] = data[offset : offset+str_len].decode('utf-8')
         offset += str_len
     if (flags & 0x0080): # 1 << 7
         (str_len,) = unpack_from('!B', data, offset)
         offset += 1
-        props['message_id'] = data[offset : offset+str_len]
+        props['message_id'] = data[offset : offset+str_len].decode('utf-8')
         offset += str_len
     if (flags & 0x0040): # 1 << 6
         (props['timestamp'],) = unpack_from('!Q', data, offset)
@@ -568,22 +599,22 @@ def decode_basic_properties(data, offset):
     if (flags & 0x0020): # 1 << 5
         (str_len,) = unpack_from('!B', data, offset)
         offset += 1
-        props['type_'] = data[offset : offset+str_len]
+        props['type_'] = data[offset : offset+str_len].decode('utf-8')
         offset += str_len
     if (flags & 0x0010): # 1 << 4
         (str_len,) = unpack_from('!B', data, offset)
         offset += 1
-        props['user_id'] = data[offset : offset+str_len]
+        props['user_id'] = data[offset : offset+str_len].decode('utf-8')
         offset += str_len
     if (flags & 0x0008): # 1 << 3
         (str_len,) = unpack_from('!B', data, offset)
         offset += 1
-        props['app_id'] = data[offset : offset+str_len]
+        props['app_id'] = data[offset : offset+str_len].decode('utf-8')
         offset += str_len
     if (flags & 0x0004): # 1 << 2
         (str_len,) = unpack_from('!B', data, offset)
         offset += 1
-        props['cluster_id'] = data[offset : offset+str_len]
+        props['cluster_id'] = data[offset : offset+str_len].decode('utf-8')
         offset += str_len
     return props, offset
 
@@ -597,7 +628,7 @@ PROPS = {
 def encode_connection_start_ok(client_properties, mechanism, response, locale):
     client_properties_raw = table.encode(client_properties)
     return ( (0x01,
-              ''.join((
+              bin_join((
                 pack('!I', METHOD_CONNECTION_START_OK),
                 client_properties_raw,
                 pack('!B', len(mechanism)),
@@ -612,7 +643,7 @@ def encode_connection_start_ok(client_properties, mechanism, response, locale):
 # response=None
 def encode_connection_secure_ok(response):
     return ( (0x01,
-              ''.join((
+              bin_join((
                 pack('!II', METHOD_CONNECTION_SECURE_OK, len(response)),
                 response,
               ))
@@ -627,17 +658,17 @@ def encode_connection_tune_ok(channel_max, frame_max, heartbeat):
 # virtual_host='/' capabilities='' insist=False
 def encode_connection_open(virtual_host):
     return ( (0x01,
-              ''.join((
+              bin_join((
                 pack('!IB', METHOD_CONNECTION_OPEN, len(virtual_host)),
                 virtual_host,
-                "\x00\x00",
+                b"\x00\x00",
               ))
            ), )
 
 # reply_code=None reply_text='' class_id=None method_id=None
 def encode_connection_close(reply_code, reply_text, class_id, method_id):
     return ( (0x01,
-              ''.join((
+              bin_join((
                 pack('!IHB', METHOD_CONNECTION_CLOSE, reply_code, len(reply_text)),
                 reply_text,
                 pack('!HH', class_id, method_id),
@@ -648,6 +679,21 @@ def encode_connection_close(reply_code, reply_text, class_id, method_id):
 def encode_connection_close_ok():
     return ( (0x01,
                 pack('!I', METHOD_CONNECTION_CLOSE_OK),
+           ), )
+
+# reason=''
+def encode_connection_blocked(reason):
+    return ( (0x01,
+              bin_join((
+                pack('!IB', METHOD_CONNECTION_BLOCKED, len(reason)),
+                reason,
+              ))
+           ), )
+
+# 
+def encode_connection_unblocked():
+    return ( (0x01,
+                pack('!I', METHOD_CONNECTION_UNBLOCKED),
            ), )
 
 # out_of_band=''
@@ -671,7 +717,7 @@ def encode_channel_flow_ok(active):
 # reply_code=None reply_text='' class_id=None method_id=None
 def encode_channel_close(reply_code, reply_text, class_id, method_id):
     return ( (0x01,
-              ''.join((
+              bin_join((
                 pack('!IHB', METHOD_CHANNEL_CLOSE, reply_code, len(reply_text)),
                 reply_text,
                 pack('!HH', class_id, method_id),
@@ -688,7 +734,7 @@ def encode_channel_close_ok():
 def encode_exchange_declare(exchange, type_, passive, durable, auto_delete, internal, arguments):
     arguments_raw = table.encode(arguments)
     return ( (0x01,
-              ''.join((
+              bin_join((
                 pack('!IHB', METHOD_EXCHANGE_DECLARE, 0, len(exchange)),
                 exchange,
                 pack('!B', len(type_)),
@@ -701,7 +747,7 @@ def encode_exchange_declare(exchange, type_, passive, durable, auto_delete, inte
 # ticket=0 exchange=None if_unused=False nowait=False
 def encode_exchange_delete(exchange, if_unused):
     return ( (0x01,
-              ''.join((
+              bin_join((
                 pack('!IHB', METHOD_EXCHANGE_DELETE, 0, len(exchange)),
                 exchange,
                 pack('!B', (if_unused and 0x1 or 0)),
@@ -712,14 +758,14 @@ def encode_exchange_delete(exchange, if_unused):
 def encode_exchange_bind(destination, source, routing_key, arguments):
     arguments_raw = table.encode(arguments)
     return ( (0x01,
-              ''.join((
+              bin_join((
                 pack('!IHB', METHOD_EXCHANGE_BIND, 0, len(destination)),
                 destination,
                 pack('!B', len(source)),
                 source,
                 pack('!B', len(routing_key)),
                 routing_key,
-                "\x00",
+                b"\x00",
                 arguments_raw,
               ))
            ), )
@@ -728,14 +774,14 @@ def encode_exchange_bind(destination, source, routing_key, arguments):
 def encode_exchange_unbind(destination, source, routing_key, arguments):
     arguments_raw = table.encode(arguments)
     return ( (0x01,
-              ''.join((
+              bin_join((
                 pack('!IHB', METHOD_EXCHANGE_UNBIND, 0, len(destination)),
                 destination,
                 pack('!B', len(source)),
                 source,
                 pack('!B', len(routing_key)),
                 routing_key,
-                "\x00",
+                b"\x00",
                 arguments_raw,
               ))
            ), )
@@ -744,7 +790,7 @@ def encode_exchange_unbind(destination, source, routing_key, arguments):
 def encode_queue_declare(queue, passive, durable, exclusive, auto_delete, arguments):
     arguments_raw = table.encode(arguments)
     return ( (0x01,
-              ''.join((
+              bin_join((
                 pack('!IHB', METHOD_QUEUE_DECLARE, 0, len(queue)),
                 queue,
                 pack('!B', (passive and 0x1 or 0) | (durable and 0x2 or 0) | (exclusive and 0x4 or 0) | (auto_delete and 0x8 or 0)),
@@ -756,14 +802,14 @@ def encode_queue_declare(queue, passive, durable, exclusive, auto_delete, argume
 def encode_queue_bind(queue, exchange, routing_key, arguments):
     arguments_raw = table.encode(arguments)
     return ( (0x01,
-              ''.join((
+              bin_join((
                 pack('!IHB', METHOD_QUEUE_BIND, 0, len(queue)),
                 queue,
                 pack('!B', len(exchange)),
                 exchange,
                 pack('!B', len(routing_key)),
                 routing_key,
-                "\x00",
+                b"\x00",
                 arguments_raw,
               ))
            ), )
@@ -771,17 +817,17 @@ def encode_queue_bind(queue, exchange, routing_key, arguments):
 # ticket=0 queue='' nowait=False
 def encode_queue_purge(queue):
     return ( (0x01,
-              ''.join((
+              bin_join((
                 pack('!IHB', METHOD_QUEUE_PURGE, 0, len(queue)),
                 queue,
-                "\x00",
+                b"\x00",
               ))
            ), )
 
 # ticket=0 queue='' if_unused=False if_empty=False nowait=False
 def encode_queue_delete(queue, if_unused, if_empty):
     return ( (0x01,
-              ''.join((
+              bin_join((
                 pack('!IHB', METHOD_QUEUE_DELETE, 0, len(queue)),
                 queue,
                 pack('!B', (if_unused and 0x1 or 0) | (if_empty and 0x2 or 0)),
@@ -792,7 +838,7 @@ def encode_queue_delete(queue, if_unused, if_empty):
 def encode_queue_unbind(queue, exchange, routing_key, arguments):
     arguments_raw = table.encode(arguments)
     return ( (0x01,
-              ''.join((
+              bin_join((
                 pack('!IHB', METHOD_QUEUE_UNBIND, 0, len(queue)),
                 queue,
                 pack('!B', len(exchange)),
@@ -813,7 +859,7 @@ def encode_basic_qos(prefetch_size, prefetch_count, global_):
 def encode_basic_consume(queue, consumer_tag, no_local, no_ack, exclusive, arguments):
     arguments_raw = table.encode(arguments)
     return ( (0x01,
-              ''.join((
+              bin_join((
                 pack('!IHB', METHOD_BASIC_CONSUME, 0, len(queue)),
                 queue,
                 pack('!B', len(consumer_tag)),
@@ -826,10 +872,10 @@ def encode_basic_consume(queue, consumer_tag, no_local, no_ack, exclusive, argum
 # consumer_tag=None nowait=False
 def encode_basic_cancel(consumer_tag):
     return ( (0x01,
-              ''.join((
+              bin_join((
                 pack('!IB', METHOD_BASIC_CANCEL, len(consumer_tag)),
                 consumer_tag,
-                "\x00",
+                b"\x00",
               ))
            ), )
 
@@ -839,7 +885,7 @@ def encode_basic_publish(exchange, routing_key, mandatory, immediate, user_heade
     if headers:
         props['headers'] = headers
     return [ (0x01,
-              ''.join((
+              bin_join((
                 pack('!IHB', METHOD_BASIC_PUBLISH, 0, len(exchange)),
                 exchange,
                 pack('!B', len(routing_key)),
@@ -853,7 +899,7 @@ def encode_basic_publish(exchange, routing_key, mandatory, immediate, user_heade
 # ticket=0 queue='' no_ack=False
 def encode_basic_get(queue, no_ack):
     return ( (0x01,
-              ''.join((
+              bin_join((
                 pack('!IHB', METHOD_BASIC_GET, 0, len(queue)),
                 queue,
                 pack('!B', (no_ack and 0x1 or 0)),
@@ -917,14 +963,14 @@ ENCODE_PROPS_BASIC = {
     'content_type': (
         0,
         0x8000, # (1 << 15)
-        lambda val: ''.join((
+        lambda val: bin_join((
                 pack('!B', len(val)),
                 val,
         )) ),
     'content_encoding': (
         1,
         0x4000, # (1 << 14)
-        lambda val: ''.join((
+        lambda val: bin_join((
                 pack('!B', len(val)),
                 val,
         )) ),
@@ -946,28 +992,28 @@ ENCODE_PROPS_BASIC = {
     'correlation_id': (
         5,
         0x0400, # (1 << 10)
-        lambda val: ''.join((
+        lambda val: bin_join((
                 pack('!B', len(val)),
                 val,
         )) ),
     'reply_to': (
         6,
         0x0200, # (1 << 9)
-        lambda val: ''.join((
+        lambda val: bin_join((
                 pack('!B', len(val)),
                 val,
         )) ),
     'expiration': (
         7,
         0x0100, # (1 << 8)
-        lambda val: ''.join((
+        lambda val: bin_join((
                 pack('!B', len(val)),
                 val,
         )) ),
     'message_id': (
         8,
         0x0080, # (1 << 7)
-        lambda val: ''.join((
+        lambda val: bin_join((
                 pack('!B', len(val)),
                 val,
         )) ),
@@ -979,28 +1025,28 @@ ENCODE_PROPS_BASIC = {
     'type_': (
         10,
         0x0020, # (1 << 5)
-        lambda val: ''.join((
+        lambda val: bin_join((
                 pack('!B', len(val)),
                 val,
         )) ),
     'user_id': (
         11,
         0x0010, # (1 << 4)
-        lambda val: ''.join((
+        lambda val: bin_join((
                 pack('!B', len(val)),
                 val,
         )) ),
     'app_id': (
         12,
         0x0008, # (1 << 3)
-        lambda val: ''.join((
+        lambda val: bin_join((
                 pack('!B', len(val)),
                 val,
         )) ),
     'cluster_id': (
         13,
         0x0004, # (1 << 2)
-        lambda val: ''.join((
+        lambda val: bin_join((
                 pack('!B', len(val)),
                 val,
         )) ),
@@ -1016,10 +1062,10 @@ def encode_basic_properties(body_size, props):
         flags |= f
         pieces[i] = fun(props[key])
 
-    return (0x02, ''.join((
+    return (0x02, bin_join((
         pack('!HHQH',
               CLASS_BASIC, 0, body_size, flags),
-        ''.join(pieces),
+        bin_join(pieces),
         ))
         )
 

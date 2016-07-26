@@ -1,34 +1,24 @@
+import io
 import os
-try:
-    import io as StringIO
-except ImportError:
-    import io
-
-# Python 2.4 support: os lacks SEEK_END and friends
-try:
-    getattr(os, "SEEK_END")
-except AttributeError:
-    os.SEEK_SET, os.SEEK_CUR, os.SEEK_END = list(range(3))
-
 
 class SimpleBuffer(object):
     """
     >>> b = SimpleBuffer()
-    >>> b.write('abcdef')
+    >>> b.write(b'abcdef')
     >>> b.read(3)
-    'abc'
+    b'abc'
     >>> b.consume(3)
-    >>> b.write('z')
+    >>> b.write(b'z')
     >>> b.read()
-    'defz'
+    b'defz'
     >>> b.read()
-    'defz'
+    b'defz'
     >>> b.read(0)
-    ''
+    b''
     >>> repr(b)
-    "<SimpleBuffer of 4 bytes, 7 total size, 'defz'>"
+    "<SimpleBuffer of 4 bytes, 7 total size, b'defz'>"
     >>> str(b)
-    "<SimpleBuffer of 4 bytes, 7 total size, 'defz'>"
+    "<SimpleBuffer of 4 bytes, 7 total size, b'defz'>"
     >>> len(b)
     4
     >>> bool(b)
@@ -39,12 +29,12 @@ class SimpleBuffer(object):
     >>> bool(b)
     False
     >>> b.read(1)
-    ''
-    >>> b.write('a'*524288)
+    b''
+    >>> b.write(b'a'*524288)
     >>> b.flush() # run GC code
     """
     def __init__(self):
-        self.buf = io.StringIO()
+        self.buf = io.BytesIO()
         self.size = 0
         self.offset = 0
 
@@ -69,7 +59,7 @@ class SimpleBuffer(object):
         # GC old StringIO instance and free memory used by it.
         if self.size == 0 and self.offset > 524288:
             self.buf.close()
-            self.buf = io.StringIO()
+            self.buf = io.BytesIO()
             self.offset = 0
 
     def flush(self):

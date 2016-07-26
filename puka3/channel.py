@@ -82,7 +82,7 @@ class Channel(object):
         self.body_size = body_size
         self.props = props
         if self.body_size == 0: # don't expect body frame
-            self.inbound_body('')
+            self.inbound_body(b'')
 
     def inbound_body(self, body_chunk):
         self.body_chunks.append( body_chunk )
@@ -91,7 +91,7 @@ class Channel(object):
             result = self.method_frame
             props = self.props
 
-            result['body'] = ''.join(self.body_chunks)
+            result['body'] = (b''.join(self.body_chunks)).decode('utf-8')
             result['headers'] = props.get('headers', {})
             # Aint need a reference loop.
             if 'headers' in props:
