@@ -14,10 +14,10 @@ $(AMQP_JSON_SPEC):
 	@echo "  git submodule init && git submodule update"
 	@exit 1
 
-puka/spec.py: codegen.py codegen_helpers.py \
+puka3/spec.py: codegen.py codegen_helpers.py \
 		$(CODEGEN_DIR)/amqp_codegen.py \
 		$(AMQP_JSON_SPEC) amqp-accepted-by-update.json
-	$(PYTHON) codegen.py spec $(AMQP_JSON_SPEC) puka/spec.py
+	$(PYTHON) codegen.py spec $(AMQP_JSON_SPEC) puka3/spec.py
 
 puka3/spec_exceptions.py: codegen.py codegen_helpers.py \
 		$(CODEGEN_DIR)/amqp_codegen.py \
