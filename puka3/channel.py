@@ -4,7 +4,7 @@ import logging
 from . import machine
 from spec_exceptions import ChannelError
 
-log = logging.getLogger('puka')
+log = logging.getLogger('puka3')
 
 
 

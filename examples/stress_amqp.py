@@ -3,7 +3,7 @@
 import sys
 sys.path.append("..")
 
-import puka
+import puka3
 import time
 import collections
 
@@ -37,14 +37,14 @@ class AsyncGeneratorState(object):
             self.waiting_for = self.gen.send(result)
         self.client.set_callback(self.waiting_for, self.callback_wrapper)
 
-def puka_async_generator(method):
+def puka3_async_generator(method):
     def wrapper(client, *args, **kwargs):
         AsyncGeneratorState(client, method(client, *args, **kwargs))
         return None
     return wrapper
 
 
-@puka_async_generator
+@puka3_async_generator
 def worker(client, q, msg_cnt, body, prefetch_cnt, inc, avg):
     result = (yield client.queue_declare(queue=q, durable=True))
     fill = max(msg_cnt - result['message_count'], 0)
@@ -71,7 +71,7 @@ def worker(client, q, msg_cnt, body, prefetch_cnt, inc, avg):
 
 average = average_count = 0.0
 def main():
-    client = puka.Client(AMQP_URL, pubacks=PUBACKS)
+    client = puka3.Client(AMQP_URL, pubacks=PUBACKS)
     promise = client.connect()
     client.wait(promise)
 

@@ -1,7 +1,7 @@
 from __future__ import with_statement
 
 import os
-import puka
+import puka3
 
 import base
 

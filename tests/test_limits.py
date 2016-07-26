@@ -1,6 +1,6 @@
 import os
 import unittest
-import puka
+import puka3
 import random
 import time
 
@@ -11,7 +11,7 @@ class TestLimits(unittest.TestCase):
         qname = 'test%s' % (random.random(),)
         msg = '%s' % (random.random(),)
 
-        client = puka.Client(AMQP_URL)
+        client = puka3.Client(AMQP_URL)
         promise = client.connect()
         client.wait(promise)
 

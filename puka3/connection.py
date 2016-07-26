@@ -15,7 +15,7 @@ from . import simplebuffer
 from . import spec
 from . import promise
 
-log = logging.getLogger('puka')
+log = logging.getLogger('puka3')
 
 
 class Connection(object):

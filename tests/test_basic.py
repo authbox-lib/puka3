@@ -1,14 +1,14 @@
 from __future__ import with_statement
 
 import os
-import puka
+import puka3
 
 import base
 
 
 class TestBasic(base.TestCase):
     def test_simple_roundtrip(self):
-        client = puka.Client(self.amqp_url)
+        client = puka3.Client(self.amqp_url)
         promise = client.connect()
         client.wait(promise)
 
@@ -27,9 +27,9 @@ class TestBasic(base.TestCase):
         client.wait(promise)
 
     def test_simple_roundtrip_with_connection_properties(self):
-        props = { 'puka_test': 'blah', 'random_prop': 1234 }
+        props = { 'puka3_test': 'blah', 'random_prop': 1234 }
 
-        client = puka.Client(self.amqp_url, client_properties=props)
+        client = puka3.Client(self.amqp_url, client_properties=props)
         promise = client.connect()
         client.wait(promise)
 
@@ -49,7 +49,7 @@ class TestBasic(base.TestCase):
 
 
     def test_purge(self):
-        client = puka.Client(self.amqp_url)
+        client = puka3.Client(self.amqp_url)
         promise = client.connect()
         client.wait(promise)
 
@@ -73,7 +73,7 @@ class TestBasic(base.TestCase):
 
 
     def test_basic_get_ack(self):
-        client = puka.Client(self.amqp_url)
+        client = puka3.Client(self.amqp_url)
         promise = client.connect()
         client.wait(promise)
 
@@ -109,7 +109,7 @@ class TestBasic(base.TestCase):
 
 
     def test_basic_publish_bad_exchange(self):
-        client = puka.Client(self.amqp_url)
+        client = puka3.Client(self.amqp_url)
         promise = client.connect()
         client.wait(promise)
 
@@ -120,7 +120,7 @@ class TestBasic(base.TestCase):
             self.assertEqual(len(client.channels.free_channels), 0)
             self.assertEqual(client.channels.free_channel_numbers[-1], 2)
 
-            with self.assertRaises(puka.NotFound) as cm:
+            with self.assertRaises(puka3.NotFound) as cm:
                 client.wait(promise)
 
             (r,) = cm.exception # unpack args of exception
@@ -132,13 +132,13 @@ class TestBasic(base.TestCase):
 
 
     def test_basic_return(self):
-        client = puka.Client(self.amqp_url)
+        client = puka3.Client(self.amqp_url)
         promise = client.connect()
         client.wait(promise)
 
         promise = client.basic_publish(exchange='', routing_key=self.name,
                                        mandatory=True, body='')
-        with self.assertRaises(puka.NoRoute):
+        with self.assertRaises(puka3.NoRoute):
             client.wait(promise)
 
         promise = client.queue_declare(queue=self.name)
@@ -153,7 +153,7 @@ class TestBasic(base.TestCase):
 
 
     def test_persistent(self):
-        client = puka.Client(self.amqp_url)
+        client = puka3.Client(self.amqp_url)
         promise = client.connect()
         client.wait(promise)
 
@@ -193,7 +193,7 @@ class TestBasic(base.TestCase):
 
 
     def test_basic_reject(self):
-        client = puka.Client(self.amqp_url)
+        client = puka3.Client(self.amqp_url)
         promise = client.connect()
         client.wait(promise)
 
@@ -220,7 +220,7 @@ class TestBasic(base.TestCase):
 
 
     def test_basic_reject_no_requeue(self):
-        client = puka.Client(self.amqp_url)
+        client = puka3.Client(self.amqp_url)
         promise = client.connect()
         client.wait(promise)
 
@@ -248,7 +248,7 @@ class TestBasic(base.TestCase):
 
 
     def test_basic_reject_dead_letter_exchange(self):
-        client = puka.Client(self.amqp_url)
+        client = puka3.Client(self.amqp_url)
         promise = client.connect()
         client.wait(promise)
 
@@ -295,7 +295,7 @@ class TestBasic(base.TestCase):
 
 
     def test_properties(self):
-        client = puka.Client(self.amqp_url)
+        client = puka3.Client(self.amqp_url)
         promise = client.connect()
         client.wait(promise)
 
@@ -330,7 +330,7 @@ class TestBasic(base.TestCase):
         r = client.wait(t)
         self.assertEqual(r['body'], 'a')
         recv_headers = r['headers']
-        del recv_headers['x-puka-delivery-tag']
+        del recv_headers['x-puka3-delivery-tag']
 
         self.assertEqual(repr(headers), repr(recv_headers))
 
@@ -339,7 +339,7 @@ class TestBasic(base.TestCase):
 
 
     def test_basic_ack_fail(self):
-        client = puka.Client(self.amqp_url)
+        client = puka3.Client(self.amqp_url)
         promise = client.connect()
         client.wait(promise)
 
@@ -353,7 +353,7 @@ class TestBasic(base.TestCase):
         promise = client.basic_consume(queue=self.name)
         result = client.wait(promise)
 
-        with self.assertRaises(puka.PreconditionFailed):
+        with self.assertRaises(puka3.PreconditionFailed):
             r2 = result.copy()
             r2['delivery_tag'] = 999
             client.basic_ack(r2)
@@ -371,7 +371,7 @@ class TestBasic(base.TestCase):
 
 
     def test_basic_cancel(self):
-        client = puka.Client(self.amqp_url)
+        client = puka3.Client(self.amqp_url)
         promise = client.connect()
         client.wait(promise)
 
@@ -401,7 +401,7 @@ class TestBasic(base.TestCase):
 
 
     def test_close(self):
-        client = puka.Client(self.amqp_url)
+        client = puka3.Client(self.amqp_url)
         promise = client.connect()
         client.wait(promise)
 
@@ -423,19 +423,19 @@ class TestBasic(base.TestCase):
 
 
     def test_basic_consume_fail(self):
-        client = puka.Client(self.amqp_url)
+        client = puka3.Client(self.amqp_url)
         promise = client.connect()
         client.wait(promise)
 
         consume_promise = client.basic_consume(queue='bad_q_name')
-        with self.assertRaises(puka.NotFound):
+        with self.assertRaises(puka3.NotFound):
             msg_result = client.wait(consume_promise)
 
         promise = client.close()
         client.wait(promise)
 
     def test_broken_ack_on_close(self):
-        client = puka.Client(self.amqp_url)
+        client = puka3.Client(self.amqp_url)
         promise = client.connect()
         client.wait(promise)
 
@@ -491,7 +491,7 @@ class TestBasic(base.TestCase):
 
 
     def test_simple_roundtrip_with_heartbeat(self):
-        client = puka.Client(self.amqp_url, heartbeat=1)
+        client = puka3.Client(self.amqp_url, heartbeat=1)
         promise = client.connect()
         client.wait(promise)
 

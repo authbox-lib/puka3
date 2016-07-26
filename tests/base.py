@@ -1,6 +1,6 @@
 import functools
 import os
-import puka
+import puka3
 import random
 import unittest_backport as unittest
 
@@ -22,7 +22,7 @@ class TestCase(unittest.TestCase):
 def connect(method):
     @functools.wraps(method)
     def wrapper(self, *args, **kwargs):
-        client = puka.Client(self.amqp_url)
+        client = puka3.Client(self.amqp_url)
         promise = client.connect()
         client.wait(promise)
         r = method(self, client, *args, **kwargs)

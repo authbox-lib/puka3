@@ -1,7 +1,7 @@
 from __future__ import with_statement
 
 import os
-import puka
+import puka3
 
 import base
 
@@ -57,7 +57,7 @@ class TestBasicConsumeMulti(base.TestCase):
         client.wait(promise)
 
         promise = client.queue_declare(queue=self.name)
-        with self.assertRaises(puka.ResourceLocked):
+        with self.assertRaises(puka3.ResourceLocked):
             client.wait(promise)
 
         # Testing exclusive basic_consume.
@@ -69,7 +69,7 @@ class TestBasicConsumeMulti(base.TestCase):
         client.wait(promise)
 
         promise = client.basic_consume(queue=self.name)
-        with self.assertRaises(puka.AccessRefused):
+        with self.assertRaises(puka3.AccessRefused):
             client.wait(promise)
 
         promise = client.queue_delete(queue=self.name)
@@ -134,7 +134,7 @@ class TestBasicConsumeMulti(base.TestCase):
     @base.connect
     def test_consumer_tag_repeated(self, client):
         # In theory consumer_tags are unique. But our users may not
-        # know about it. Test puka's behaviour in that case
+        # know about it. Test puka3's behaviour in that case
 
         p1 = client.queue_declare(queue=self.name1)
         p2 = client.queue_declare(queue=self.name2)

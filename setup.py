@@ -8,18 +8,18 @@ import os, shutil
 os.link = shutil.copy
 
 
-if not os.path.exists("puka/spec.py"):
+if not os.path.exists("puka3/spec.py"):
     print >> sys.stderr, "Run 'make' first."
     sys.exit(1)
 
 
-setuptools.setup(name='puka',
+setuptools.setup(name='puka3',
       version=file('VERSION').read().strip(),
-      description='Puka - the opinionated RabbitMQ client',
-      author='Marek Majkowski',
-      author_email='marek@popcount.org',
-      url='http://github.com/majek/puka#readme',
-      packages=['puka'],
+      description='Puka3 - the opinionated RabbitMQ client',
+      author='Josh Yudaken',
+      author_email='josh@smyte.com',
+      url='http://github.com/authbox-lib/puka3#readme',
+      packages=['puka3'],
       platforms=['any'],
       license='MIT',
       classifiers=[

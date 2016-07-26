@@ -9,9 +9,9 @@ logging.basicConfig(level=logging.DEBUG, format=FORMAT_CONS)
 
 
 
-import puka
+import puka3
 
-client = puka.Client("amqp://localhost/")
+client = puka3.Client("amqp://localhost/")
 
 promise = client.connect()
 client.wait(promise)

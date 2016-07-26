@@ -4,7 +4,7 @@ from . import channel
 from . import spec
 from . import exceptions
 
-log = logging.getLogger('puka')
+log = logging.getLogger('puka3')
 
 
 

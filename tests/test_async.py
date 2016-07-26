@@ -1,5 +1,5 @@
 import os
-import puka
+import puka3
 import random
 
 import base
@@ -7,7 +7,7 @@ import base
 
 class TestBasic(base.TestCase):
     def test_simple_roundtrip(self):
-        client = puka.Client(self.amqp_url)
+        client = puka3.Client(self.amqp_url)
 
         def on_connect(t, result):
             client.queue_declare(queue=self.name,
@@ -54,7 +54,7 @@ class TestBasic(base.TestCase):
         def on_queue_delete(promise, result):
             client.loop_break()
 
-        client = puka.Client(self.amqp_url)
+        client = puka3.Client(self.amqp_url)
         client.connect(callback=on_connection)
         client.loop()
 
@@ -74,7 +74,7 @@ class TestBasic(base.TestCase):
         def on_basic_consume(promise, result):
             self.assertTrue(result.is_error)
 
-        client = puka.Client(self.amqp_url)
+        client = puka3.Client(self.amqp_url)
         client.connect(callback=on_connection)
         client.loop()
 

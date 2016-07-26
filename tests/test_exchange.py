@@ -1,7 +1,7 @@
 from __future__ import with_statement
 
 import os
-import puka
+import puka3
 import random
 
 import base
@@ -9,7 +9,7 @@ import base
 
 class TestExchange(base.TestCase):
     def test_exchange_redeclare(self):
-        client = puka.Client(self.amqp_url)
+        client = puka3.Client(self.amqp_url)
         promise = client.connect()
         client.wait(promise)
 
@@ -17,24 +17,24 @@ class TestExchange(base.TestCase):
         r = client.wait(promise)
 
         promise = client.exchange_declare(exchange=self.name, type='fanout')
-        with self.assertRaises(puka.PreconditionFailed):
+        with self.assertRaises(puka3.PreconditionFailed):
             client.wait(promise)
 
         promise = client.exchange_delete(exchange=self.name)
         client.wait(promise)
 
     def test_exchange_delete_not_found(self):
-        client = puka.Client(self.amqp_url)
+        client = puka3.Client(self.amqp_url)
         promise = client.connect()
         client.wait(promise)
 
         promise = client.exchange_delete(exchange='not_existing_exchange')
 
-        with self.assertRaises(puka.NotFound):
+        with self.assertRaises(puka3.NotFound):
             client.wait(promise)
 
     def test_bind(self):
-        client = puka.Client(self.amqp_url)
+        client = puka3.Client(self.amqp_url)
         promise = client.connect()
         client.wait(promise)
 

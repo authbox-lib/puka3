@@ -1,8 +1,8 @@
-# https://github.com/majek/puka/issues/3
+# https://github.com/majek/puka3/issues/3
 from __future__ import with_statement
 
 import os
-import puka
+import puka3
 import random
 
 import base
@@ -10,7 +10,7 @@ import base
 
 class TestBug3(base.TestCase):
     def test_bug3_wait(self):
-        client = puka.Client(self.amqp_url)
+        client = puka3.Client(self.amqp_url)
         promise = client.connect()
         client.wait(promise)
         qname = 'test%s' % (random.random(),)
@@ -33,7 +33,7 @@ class TestBug3(base.TestCase):
         self._epilogue(qname, 1)
 
     def _epilogue(self, qname, expected):
-        client = puka.Client(self.amqp_url)
+        client = puka3.Client(self.amqp_url)
         promise = client.connect()
         client.wait(promise)
         promise = client.queue_declare(queue=qname)
@@ -44,7 +44,7 @@ class TestBug3(base.TestCase):
         client.wait(promise)
 
     def test_bug3_loop(self):
-        client = puka.Client(self.amqp_url)
+        client = puka3.Client(self.amqp_url)
         promise = client.connect()
         client.wait(promise)
         qname = 'test%s' % (random.random(),)

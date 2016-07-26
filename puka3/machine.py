@@ -5,7 +5,7 @@ from . import exceptions
 from . import spec
 from . import ordereddict
 
-log = logging.getLogger('puka')
+log = logging.getLogger('puka3')
 
 def _nothing(t):
     pass
@@ -106,15 +106,15 @@ def basic_publish(conn, exchange, routing_key='', mandatory=False,
     pt.x_delivery_tag += 1
 
     nheaders = fix_basic_publish_headers(headers)
-    assert 'x-puka-delivery-tag' not in nheaders
-    nheaders['x-puka-delivery-tag'] = delivery_tag
+    assert 'x-puka3-delivery-tag' not in nheaders
+    nheaders['x-puka3-delivery-tag'] = delivery_tag
 
     frames = spec.encode_basic_publish(exchange, routing_key, mandatory,
                                        False, nheaders, body,
                                        conn.frame_max)
     if not conn.x_pubacks:
         # Construct ack packet.
-        eheaders = {'x-puka-delivery-tag': delivery_tag, 'x-puka-footer': True}
+        eheaders = {'x-puka3-delivery-tag': delivery_tag, 'x-puka-footer': True}
         frames = frames + \
                  spec.encode_basic_publish('', '', True, False, eheaders,
                                                 '', conn.frame_max)
@@ -134,10 +134,10 @@ def _pt_async_flush(pt):
 
 def _pt_basic_return(pt, result):
     pt.register(spec.METHOD_BASIC_RETURN, _pt_basic_return)
-    delivery_tag = result['headers']['x-puka-delivery-tag']
+    delivery_tag = result['headers']['x-puka3-delivery-tag']
     if delivery_tag in pt.x_async_inflight:
         t = pt.x_async_inflight.pop(delivery_tag)
-        if 'x-puka-footer' in result['headers']: # ok
+        if 'x-puka3-footer' in result['headers']: # ok
             t.done(spec.Frame())
         else: # return
             exceptions.mark_frame(result)

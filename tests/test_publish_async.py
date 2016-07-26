@@ -1,7 +1,7 @@
 from __future__ import with_statement
 
 import os
-import puka
+import puka3
 import random
 import socket
 
@@ -11,7 +11,7 @@ import base
 class TestPublishAsync(base.TestCase):
     pubacks = None
     def test_simple_roundtrip(self):
-        client = puka.Client(self.amqp_url, pubacks=self.pubacks)
+        client = puka3.Client(self.amqp_url, pubacks=self.pubacks)
         promise = client.connect()
         client.wait(promise)
 
@@ -36,7 +36,7 @@ class TestPublishAsync(base.TestCase):
         client.wait(promise)
 
     def test_big_failure(self):
-        client = puka.Client(self.amqp_url, pubacks=self.pubacks)
+        client = puka3.Client(self.amqp_url, pubacks=self.pubacks)
         promise = client.connect()
         client.wait(promise)
 
@@ -52,9 +52,9 @@ class TestPublishAsync(base.TestCase):
         promise3 = client.basic_publish(exchange='', routing_key='',
                                         body=self.msg)
         client.wait(promise1)
-        with self.assertRaises(puka.NotFound):
+        with self.assertRaises(puka3.NotFound):
             client.wait(promise2)
-        with self.assertRaises(puka.NotFound):
+        with self.assertRaises(puka3.NotFound):
             client.wait(promise3)
 
         # validate if it still works
@@ -66,7 +66,7 @@ class TestPublishAsync(base.TestCase):
         promise = client.basic_publish(exchange='wrong_exchange',
                                        routing_key='',
                                        body=self.msg)
-        with self.assertRaises(puka.NotFound):
+        with self.assertRaises(puka3.NotFound):
             client.wait(promise)
 
         # and validate again
@@ -78,18 +78,18 @@ class TestPublishAsync(base.TestCase):
         client.wait(promise)
 
     def test_return(self):
-        client = puka.Client(self.amqp_url, pubacks=self.pubacks)
+        client = puka3.Client(self.amqp_url, pubacks=self.pubacks)
         promise = client.connect()
         client.wait(promise)
 
         promise = client.basic_publish(exchange='', routing_key='',
                                        body=self.msg, mandatory=True)
-        with self.assertRaises(puka.NoRoute):
+        with self.assertRaises(puka3.NoRoute):
             client.wait(promise)
 
 
     def test_return_2(self):
-        client = puka.Client(self.amqp_url, pubacks=self.pubacks)
+        client = puka3.Client(self.amqp_url, pubacks=self.pubacks)
         promise = client.connect()
         client.wait(promise)
 
@@ -100,7 +100,7 @@ class TestPublishAsync(base.TestCase):
                                        mandatory=True, body=self.msg)
         try:
             client.wait(promise)
-        except puka.NoRoute, (response,):
+        except puka3.NoRoute, (response,):
             pass
 
         self.assertEqual(response['reply_code'], 312)
@@ -110,7 +110,7 @@ class TestPublishAsync(base.TestCase):
 
 
     def test_simple_basic_get(self):
-        client = puka.Client(self.amqp_url, pubacks=self.pubacks)
+        client = puka3.Client(self.amqp_url, pubacks=self.pubacks)
         promise = client.connect()
         client.wait(promise)
 
@@ -135,8 +135,8 @@ class TestPublishAsync(base.TestCase):
 
 
     def test_bug21(self):
-        # Following the testcase: https://github.com/majek/puka/issues/21
-        client = puka.Client(self.amqp_url, pubacks=self.pubacks)
+        # Following the testcase: https://github.com/majek/puka3/issues/21
+        client = puka3.Client(self.amqp_url, pubacks=self.pubacks)
         promise = client.connect()
         client.wait(promise)
 
@@ -159,7 +159,7 @@ class TestPublishAsyncPubacksFalse(TestPublishAsync):
 class TestPublishAckDetection(base.TestCase):
     # Assuming reasonably recent RabbitMQ server (which does pubacks).
     def test_pubacks(self):
-        client = puka.Client(self.amqp_url)
+        client = puka3.Client(self.amqp_url)
         promise = client.connect()
         r = client.wait(promise)
         self.assertEqual(client.pubacks, None)

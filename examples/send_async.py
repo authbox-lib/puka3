@@ -4,7 +4,7 @@ import sys
 sys.path.append("..")
 
 
-import puka
+import puka3
 
 def on_connection(promise, result):
     client.queue_declare(queue='test', callback=on_queue_declare)
@@ -18,7 +18,7 @@ def on_basic_publish(promise, result):
     print " [*] Message sent"
     client.loop_break()
 
-client = puka.Client("amqp://localhost/")
+client = puka3.Client("amqp://localhost/")
 client.connect(callback=on_connection)
 client.loop()
 

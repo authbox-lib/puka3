@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 import sys
 sys.path.append("..")
-import puka
+import puka3
 
-client = puka.Client("amqp://localhost/")
+client = puka3.Client("amqp://localhost/")
 promise = client.connect()
 client.wait(promise)
 
